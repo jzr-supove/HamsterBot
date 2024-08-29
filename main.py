@@ -1,4 +1,5 @@
 import configparser
+import json
 import random
 import time
 
@@ -132,8 +133,8 @@ def get_promos():
     response = requests.post(url, headers=headers)
     response.raise_for_status()
 
-    data = response.json()
-    promos.update(data)
+    json_data = json.loads(response.content.decode('utf-8'))
+    promos.update(json_data)
 
     logger.info("Saving promos...")
     save_json(promos, "promos.json")
