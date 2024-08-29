@@ -1,0 +1,9 @@
+.idea/
+__pycache__/
+venv/
+.venv/
+.env
+logtest
+promos.json
+client_ids.json
+config.ini

@@ -1,0 +1,4 @@
+[CLIENT]
+AUTH_TOKEN = Bearer 12345
+SEC_CH_UA  = "Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"
+USER_AGENT = Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36
