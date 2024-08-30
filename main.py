@@ -1,21 +1,18 @@
-import configparser
 import json
 import random
 import time
 
 import requests
+from loguru import logger
 
-from helper import load_json, save_json
-from keygen import GamePlayer
-from logconf import logger
+from config import configure_logger, DEBUG, USER_AGENT, AUTH_TOKEN, SEC_CH_UA
+from helper import save_json, decompress_response, load_json
+from emulator import Emulator
 
-config = configparser.ConfigParser()
-config.read("config.ini")
-client = config["CLIENT"]
-
-AUTH_TOKEN = client["AUTH_TOKEN"]
-USER_AGENT = client["USER_AGENT"]
-SEC_CH_UA = client["SEC_CH_UA"]
+if DEBUG:
+    configure_logger("DEBUG")
+else:
+    configure_logger("INFO")
 
 promos = load_json("promos.json")
 
@@ -75,8 +72,6 @@ def apply_promo(code: str) -> bool:
     data = {'promoCode': code}
     response = requests.post(url, headers=headers, json=data)
 
-    logger.info(f"Key '{code}' applied: {response.status_code == 200}")
-
     if response.status_code == 200:
         logger.info(f"Key '{code}' applied")
         return True
@@ -133,16 +128,28 @@ def get_promos():
     response = requests.post(url, headers=headers)
     response.raise_for_status()
 
-    json_data = json.loads(response.content.decode('utf-8'))
+    content = decompress_response(response)
+
+    try:
+        json_data = json.loads(content.decode('utf-8'))
+    except Exception as e:
+        logger.error(f"Failed to parse JSON: {e}, content saved at 'js_debug' file for debugging")
+
+        with open("js_debug", mode="wb") as f:
+            f.write(response.content)
+
+        return False
+
     promos.update(json_data)
 
     logger.info("Saving promos...")
     save_json(promos, "promos.json")
+    return True
 
 
 def start_playing():
     logger.info("Starting playing mini-games...")
-    gp = GamePlayer()
+    gp = Emulator()
     keys_left = {}
     promo_names = {}
 
@@ -179,9 +186,10 @@ def start_playing():
                 logger.info(f"[{name}] Generating key...")
                 key = gp.generate_key(pid, client_id, client_token)
                 if key:
-                    sleeper = random.randint(0, 20) + random.random()
-                    logger.info(f"[{name}] Applying key {key} in {round(sleeper, 2)} seconds ...")
-                    time.sleep(sleeper)
+                    secs = random.randint(5, 15) + random.random()
+                    logger.info(f"[{name}] Applying key {key} in {round(secs, 2)} seconds ...")
+                    time.sleep(secs)
+
                     if apply_promo(key):
                         left -= 1
                 else:
@@ -192,8 +200,8 @@ def start_playing():
 
 def main():
     logger.info("HamsterKombat MiniGame autoplayer is started")
-    get_promos()
-    start_playing()
+    if get_promos():
+        start_playing()
 
 
 if __name__ == '__main__':

@@ -192,7 +192,7 @@ def generate_client_id(game_id: int):
     return games[game_id].get("clientId", lambda: gen_uuid4)()
 
 
-class GamePlayer:
+class Emulator:
     LOGIN_URL = "https://api.gamepromo.io/promo/login-client"
     EVENT_URL = "https://api.gamepromo.io/promo/register-event"
     CODE_URL = "https://api.gamepromo.io/promo/create-code"
