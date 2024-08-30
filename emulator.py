@@ -4,7 +4,6 @@ import typing
 import uuid
 
 import requests
-import urllib3
 from loguru import logger
 
 from helper import save_json, load_json
@@ -18,28 +17,32 @@ def gen_uuid4hex():
     return uuid.uuid4().hex
 
 
-def gen_timestamp_id():
+def gen_uuid4hex_short():
+    return uuid.uuid4().hex[:16]
+
+
+def gen_timestamp_random_id():
     timestamp = int(time.time() * 1000)
     random_numbers = ''.join(str(random.randint(0, 9)) for _ in range(19))
     return f"{timestamp}-{random_numbers}"
 
 
+def gen_timestamp_id():
+    return str(int(time.time() * 1000))
+
+
+def gen_gangswars_cid():
+    unique_id = uuid.uuid4().hex
+    return f"duqdh_{unique_id}"
+
+
+def gen_gangswars_eid():
+    uuid1 = uuid.uuid4().hex[:16]
+    uuid2 = uuid.uuid4().hex[:16]
+    return f"{uuid1}-{uuid2}"
+
+
 games = {
-    "43e35910-c168-4634-ad4f-52fd764a843f": {
-        'name': 'Bike Ride 3D',
-        'appToken': 'd28721be-fd2d-4b45-869e-9f253b554e50',
-        "headers": {
-            "Connection": "keep-alive",
-            "Content-Type": "application/json; charset=utf-8",
-            "Host": "api.gamepromo.io",
-            "User-Agent": urllib3.util.SKIP_HEADER
-        },
-        "clientOrigin": "deviceid",
-        "clientId": gen_timestamp_id,
-        "eventId": gen_uuid4,
-        "eventDuration": 85,  # duration of event
-        'attempts': 15,
-    },
     "b4170868-cef0-424f-8eb9-be0622e8e8e3": {
         'name': 'Chain Cube 2048',
         'appToken': 'd1690a07-3780-4068-810f-9b5bbf2931b2',
@@ -58,12 +61,6 @@ games = {
         "eventType": "cube_sent",
         "eventDuration": 120,
         'attempts': 10,
-    },
-    "fe693b26-b342-4159-8808-15e3ff7f8767": {
-        'name': 'My Clone Army',
-        'appToken': '74ee0b5b-775e-4bee-974f-63e7f4d5bacb',
-        "eventDuration": 180,
-        'attempts': 30,
     },
     "c4480ac7-e178-4973-8061-9ed5b2e17954": {
         'name': 'Train Miner',
@@ -84,12 +81,6 @@ games = {
         "eventDuration": 720,
         'attempts': 3,
     },
-    "dc128d28-c45b-411c-98ff-ac7726fbaea4": {
-        'name': 'Merge Away',  # USING WEBSOCKET
-        'appToken': '8d1cc2ad-e097-4b86-90ef-7a27e19fb833',
-        "eventDuration": 20,
-        'attempts': 25,
-    },
     "61308365-9d16-4040-8bb0-2f4a4c69074c": {
         'name': 'Twerk Race',
         'appToken': '61308365-9d16-4040-8bb0-2f4a4c69074c',
@@ -103,7 +94,7 @@ games = {
         },
         "authLower": True,
         "clientOrigin": "android",
-        "clientId": gen_timestamp_id,
+        "clientId": gen_timestamp_random_id,
         "eventId": lambda: "StartLevel",
         "eventDuration": 55,
         'attempts': 20,
@@ -140,7 +131,7 @@ games = {
         },
         "authLower": True,
         "clientOrigin": "android",
-        "clientId": gen_timestamp_id,
+        "clientId": gen_timestamp_random_id,
         "eventId": lambda: "StartLevel",
         "eventDuration": 60,
         'attempts': 12,
@@ -167,8 +158,58 @@ games = {
     "bc0971b8-04df-4e72-8a3e-ec4dc663cd11": {
         'name': 'Cafe Dash',
         'appToken': 'bc0971b8-04df-4e72-8a3e-ec4dc663cd11',
-        "eventDuration": 30,
+        "headers": {
+            "Accept-Encoding": "gzip, deflate",
+            "Accept-Language": "en-US,*",
+            "Connection": "Keep-Alive",
+            "Content-Type": "application/json",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "Mozilla/5.0"
+        },
+        "authLower": True,
+        "clientOrigin": "android",
+        "clientId": gen_uuid4hex_short,
+        "clientVersion": "2.24.0",
+        "eventId": gen_timestamp_id,
+        "eventType": "5visitorsChecks",
+        "eventDuration": 85,
+        'attempts': 15,
+    },
+    "c7821fa7-6632-482c-9635-2bd5798585f9": {
+        'name': 'Gangs Wars',
+        'appToken': 'b6de60a0-e030-48bb-a551-548372493523',
+        "headers": {
+            "Accept": "*/*",
+            "Accept-Encoding": "deflate, gzip",
+            "Content-Type": "application/json",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "UnityPlayer/2022.3.41f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)",
+            "X-Unity-Version": "2022.3.41f1"
+        },
+        "clientOrigin": "android",
+        "clientId": gen_gangswars_cid,
+        "eventId": gen_gangswars_eid,
+        "eventDuration": 70,
         'attempts': 20,
+    },
+    "b2436c89-e0aa-4aed-8046-9b0515e1c46b": {
+        'name': 'Zoopolis',
+        'appToken': 'b2436c89-e0aa-4aed-8046-9b0515e1c46b',
+        "headers": {
+            "Accept": "application/json",
+            "Accept-Encoding": "deflate, gzip",
+            "Content-Type": "application/json; charset=utf-8",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "UnityPlayer/2022.3.15f1 (UnityWebRequest/1.0, libcurl/8.4.0-DEV)",
+            "X-Unity-Version": "2022.3.15f1"
+        },
+        "clientOrigin": "android",
+        "clientId": gen_uuid4hex,
+        "clientVersion": "1.2.7",
+        "eventId": gen_uuid4,
+        "eventType": "ZoopolisEvent",
+        "eventDuration": 80,
+        'attempts': 10
     }
 }
 

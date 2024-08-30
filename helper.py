@@ -2,6 +2,7 @@ import gzip
 import json
 import os
 import zlib
+from typing import Union, Any
 
 import brotli
 import zstandard as zstd
@@ -10,11 +11,11 @@ from loguru import logger
 from config import DEBUG
 
 
-def convert_keys_to_int(d):
+def convert_keys_to_int(d: dict) -> dict:
     return {int(k) if k.isdigit() else k: v for k, v in d.items()}
 
 
-def load_json(filename: str):
+def load_json(filename: str) -> Union[dict, list]:
     if os.path.exists(filename):
         with open(filename, mode='r', encoding="utf-8") as f:
             return json.load(f, object_hook=convert_keys_to_int)
@@ -22,12 +23,12 @@ def load_json(filename: str):
         return {}
 
 
-def save_json(data, filename: str):
+def save_json(data: Any, filename: str):
     with open(filename, mode='w', encoding="utf-8") as file:
         json.dump(data, file, indent=2, ensure_ascii=False)
 
 
-def decompress_response(response):
+def decompress_response(response) -> bytes:
     content_encoding = response.headers.get('Content-Encoding', '').lower()
     content = response.content
 
@@ -42,6 +43,9 @@ def decompress_response(response):
             return zlib.decompress(content)
 
         elif content_encoding == 'br':
+            if content.startswith(b'{'):
+                return content
+
             try:
                 return brotli.decompress(content)
             except brotli.error as e:
@@ -54,8 +58,8 @@ def decompress_response(response):
                 return content
 
         elif content_encoding == 'zstd':
-            dctx = zstd.ZstdDecompressor()
-            return dctx.decompress(content)
+            zd = zstd.ZstdDecompressor()
+            return zd.decompress(content)
 
         else:
             logger.debug("No compression detected, returning content as-is")

@@ -18,12 +18,14 @@ promos = load_json("promos.json")
 
 playlist = {
     "Twerk Race",
-    "Bike Ride 3D",
     'Train Miner',
     'Chain Cube 2048',
     'Mud Racing',
     "Mow and Trim",
-    "Polysphere"
+    "Polysphere",
+    "Cafe Dash",
+    "Gangs Wars",
+    "Zoopolis"
 }
 
 
@@ -70,7 +72,8 @@ def apply_promo(code: str) -> bool:
     r.raise_for_status()
 
     data = {'promoCode': code}
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, json=data, timeout=10)
+    response.raise_for_status()
 
     if response.status_code == 200:
         logger.info(f"Key '{code}' applied")
@@ -186,8 +189,11 @@ def start_playing():
                     logger.info(f"[{name}] Applying key {key} in {round(secs, 2)} seconds ...")
                     time.sleep(secs)
 
-                    if apply_promo(key):
-                        left -= 1
+                    try:
+                        if apply_promo(key):
+                            left -= 1
+                    except Exception as e:
+                        logger.error(f"[{name}] Failed to apply key: {e}")
                 else:
                     logger.info(f"[{name}] Failed to generate key, trying again...")
 
