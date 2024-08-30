@@ -99,23 +99,19 @@ def get_promos():
 
     headers = {
         'Accept': '*/*',
-        # 'Accept-Language': 'en-US,en;q=0.9,ru;q=0.8',
         "Accept-Encoding": "gzip, deflate, br, zstd",
         'Accept-Language': 'en,en-US;q=0.9',
         "Authorization": AUTH_TOKEN,
         "Connection": "keep-alive",
         "Host": "api.hamsterkombatgame.io",
         'Origin': 'https://hamsterkombatgame.io',
-        # 'Priority': 'u=1, i',
         'Referer': 'https://hamsterkombatgame.io/',
-        # 'sec-ch-ua': '"Chromium";v="128", "Not;A=Brand";v="24", "Microsoft Edge";v="128"',
         'sec-ch-ua': SEC_CH_UA,
         'sec-ch-ua-mobile': '?1',
         'sec-ch-ua-platform': '"Android"',
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-site',
-        # 'User-Agent': 'Mozilla/5.0 (Linux; Android 8.0.0; SM-G955U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36 Edg/128.0.0.0',
         'User-Agent': USER_AGENT
     }
 
