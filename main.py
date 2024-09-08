@@ -25,7 +25,10 @@ playlist = {
     "Polysphere",
     "Cafe Dash",
     "Gangs Wars",
-    "Zoopolis"
+    "Zoopolis",
+    "Stone Age",
+    "Tile Trio",
+    "Fluff Crusade"
 }
 
 
@@ -180,6 +183,13 @@ def start_playing():
                 continue
 
             client_id, client_token = login_data
+
+            # TODO:
+            # if name == "Stone Age":
+            #     # Create a new thread that constantly executes get_client in 1 minute interval,
+            #     # until response promoCodesCount == promoCodesTotal
+            #     time.sleep(60 + random.random())
+            #     self.get_client(promo_id, client_token)
 
             while left > 0:
                 logger.info(f"[{name}] Generating key...")

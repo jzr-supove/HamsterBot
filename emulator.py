@@ -1,4 +1,5 @@
 import random
+import secrets
 import time
 import typing
 import uuid
@@ -13,12 +14,20 @@ def gen_uuid4():
     return str(uuid.uuid4())
 
 
-def gen_uuid4hex():
-    return uuid.uuid4().hex
+def gen_hex32():
+    return secrets.token_hex(16)
 
 
-def gen_uuid4hex_short():
-    return uuid.uuid4().hex[:16]
+def gen_hex16():
+    return secrets.token_hex(8)
+
+
+def gen_hex16_upper():
+    return secrets.token_hex(8).upper()
+
+
+def gen_digit7():
+    return "".join(str(random.randint(0, 9)) for _ in range(7))
 
 
 def gen_timestamp_random_id():
@@ -32,14 +41,11 @@ def gen_timestamp_id():
 
 
 def gen_gangswars_cid():
-    unique_id = uuid.uuid4().hex
-    return f"duqdh_{unique_id}"
+    return f"duqdh_{secrets.token_hex(16)}"
 
 
 def gen_gangswars_eid():
-    uuid1 = uuid.uuid4().hex[:16]
-    uuid2 = uuid.uuid4().hex[:16]
-    return f"{uuid1}-{uuid2}"
+    return f"{secrets.token_hex(8)}-{secrets.token_hex(8)}"
 
 
 games = {
@@ -74,7 +80,7 @@ games = {
             "X-Unity-Version": "2022.3.20f1"
         },
         "clientOrigin": "android",
-        "clientId": gen_uuid4hex,
+        "clientId": gen_hex32,
         "clientVersion": "2.6.3",
         "eventId": gen_uuid4,
         "eventType": "hitStatue",
@@ -116,7 +122,7 @@ games = {
         "eventId": gen_uuid4,
         "eventType": "test",
         "eventDuration": 20,
-        'attempts': 25,
+        'attempts': 20,
     },
     "ef319a80-949a-492e-8ee0-424fb5fc20a6": {
         'name': 'Mow and Trim',
@@ -168,7 +174,7 @@ games = {
         },
         "authLower": True,
         "clientOrigin": "android",
-        "clientId": gen_uuid4hex_short,
+        "clientId": gen_hex16,
         "clientVersion": "2.24.0",
         "eventId": gen_timestamp_id,
         "eventType": "5visitorsChecks",
@@ -204,13 +210,71 @@ games = {
             "X-Unity-Version": "2022.3.15f1"
         },
         "clientOrigin": "android",
-        "clientId": gen_uuid4hex,
+        "clientId": gen_hex32,
         "clientVersion": "1.2.7",
         "eventId": gen_uuid4,
         "eventType": "ZoopolisEvent",
         "eventDuration": 80,
         'attempts': 10
-    }
+    },
+    "04ebd6de-69b7-43d1-9c4b-04a6ca3305af": {
+        "name": "Stone Age",
+        "appToken": "04ebd6de-69b7-43d1-9c4b-04a6ca3305af",
+        "headers": {
+            "Accept-Encoding": "gzip",
+            "Connection": "Keep-Alive",
+            "Content-Type": "application/json",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "Dalvik/2.1.0 (Linux; U; Android 9; PGFM10 Build/PQ3A.190605.07291528)"
+        },
+        "isNewAPI": True,
+        "authLower": True,
+        "clientOrigin": "android",
+        "clientId": gen_hex16_upper,
+        "clientVersion": "1.113.114",
+        "eventId": gen_digit7,
+        "eventDuration": 80,
+        'attempts': 15
+    },
+    "e68b39d2-4880-4a31-b3aa-0393e7df10c7": {
+        "name": "Tile Trio",
+        "appToken": "e68b39d2-4880-4a31-b3aa-0393e7df10c7",
+        "headers": {
+            "Accept": "*/*",
+            "Accept-Encoding": "deflate, gzip",
+            "Authorization": "Bearer",
+            "Content-Type": "application/json",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "UnityPlayer/2020.3.48f1 (UnityWebRequest/1.0, libcurl/7.84.0-DEV)",
+            "X-Unity-Version": "2020.3.48f1"
+        },
+        "isNewAPI": True,
+        "clientOrigin": "deviceid",
+        "clientId": gen_digit7,
+        "clientVersion": "12.4.57",
+        "eventId": gen_uuid4,
+        "eventType": "gt_progress",
+        "eventDuration": 40,
+        'attempts': 25
+    },
+    "112887b0-a8af-4eb2-ac63-d82df78283d9": {
+        "name": "Fluff Crusade",
+        "appToken": "112887b0-a8af-4eb2-ac63-d82df78283d9",
+        "headers": {
+            "Accept": "*/*",
+            "Accept-Encoding": "deflate, gzip",
+            "Content-Type": "application/json",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "UnityPlayer/2022.3.27f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)",
+            "X-Unity-Version": "2022.3.27f1"
+        },
+        "isNewAPI": True,
+        "clientOrigin": "deviceid",
+        "clientId": gen_uuid4,
+        "eventId": gen_uuid4,
+        "eventDuration": 930,
+        'attempts': 2
+    },
 }
 
 client_ids = load_json("client_ids.json")
@@ -224,6 +288,11 @@ class Emulator:
     LOGIN_URL = "https://api.gamepromo.io/promo/login-client"
     EVENT_URL = "https://api.gamepromo.io/promo/register-event"
     CODE_URL = "https://api.gamepromo.io/promo/create-code"
+
+    NEW_LOGIN_URL = "https://api.gamepromo.io/promo/1/login-client"
+    NEW_CLIENT_URL = "https://api.gamepromo.io/promo/1/get-client"
+    NEW_EVENT_URL = "https://api.gamepromo.io/promo/1/register-event"
+    NEW_CODE_URL = "https://api.gamepromo.io/promo/1/create-code"
 
     def __init__(self):
         pass
@@ -239,7 +308,8 @@ class Emulator:
         if version := game.get("clientVersion"):
             body["clientVersion"] = version
 
-        response = requests.post(self.LOGIN_URL, headers=game["headers"], json=body)
+        url = self.NEW_LOGIN_URL if game.get("isNewAPI") else self.LOGIN_URL
+        response = requests.post(url, headers=game["headers"], json=body)
         response.raise_for_status()
         data = response.json()
         return data["clientToken"]
@@ -262,7 +332,8 @@ class Emulator:
         if event_type := game.get("eventType"):
             body["eventType"] = event_type
 
-        response = requests.post(self.EVENT_URL, headers=headers, json=body)
+        url = self.NEW_EVENT_URL if game.get("isNewAPI") else self.EVENT_URL
+        response = requests.post(url, headers=headers, json=body)
         response.raise_for_status()
 
         data = response.json()
@@ -278,11 +349,34 @@ class Emulator:
         }
 
         body = {"promoId": promo_id}
-        response = requests.post(self.CODE_URL, headers=headers, json=body)
+
+        url = self.NEW_CODE_URL if game.get("isNewAPI") else self.CODE_URL
+        response = requests.post(url, headers=headers, json=body)
         response.raise_for_status()
 
         data = response.json()
+
+        # TODO: [NEW_API] Return info about promoCodesCount == promoCodesTotal when promoCode is null
         return data["promoCode"]
+
+    def get_client(self, promo_id: str, client_token: str):
+        game = games[promo_id]
+
+        if not game.get("isNewAPI"):
+            return
+
+        auth_key = "authorization" if game.get("authLower") else "Authorization"
+        headers = {
+            **game["headers"],
+            auth_key: f"Bearer {client_token}"
+        }
+
+        body = {"promoId": promo_id}
+
+        response = requests.post(self.NEW_CLIENT_URL, headers=headers, json=body)
+        response.raise_for_status()
+
+        return response.json()
 
     def login(self, promo_id: str) -> typing.Optional[tuple[str, str]]:
         assert promo_id in games, f"Invalid promoId: {promo_id}"
@@ -300,6 +394,10 @@ class Emulator:
         if not client_token:
             logger.error(f"Failed to generate client token for client ID: {client_id}")
             return None
+
+        if games[promo_id].get("isNewAPI"):
+            time.sleep(random.random())
+            self.get_client(promo_id, client_token)
 
         return client_id, client_token
 
@@ -337,6 +435,12 @@ class Emulator:
         try:
             key = self.create_code(promo_id, client_token)
             logger.info(f"Generated key: {key}")
+
+            # TODO: Only for Tire Trio
+            # if games[promo_id].get("isNewAPI"):
+            #     time.sleep(random.random())
+            #     self.get_client(promo_id, client_token)
+
             return key
         except requests.RequestException as e:
             logger.error(f"An error occurred: {e}")
