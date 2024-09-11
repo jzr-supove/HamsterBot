@@ -1,13 +1,14 @@
 import json
 import random
 import time
+from threading import Event, Thread
 
 import requests
 from loguru import logger
 
 from config import configure_logger, DEBUG, USER_AGENT, AUTH_TOKEN, SEC_CH_UA
-from helper import save_json, decompress_response, load_json
 from emulator import Emulator
+from helper import save_json, decompress_response, load_json
 
 if DEBUG:
     configure_logger("DEBUG")
@@ -157,8 +158,12 @@ def start_playing():
 
     for promo in promos["promos"]:
         pid = promo["promoId"]
-        keys_left[pid] = 4
-        promo_names[pid] = promo["title"]["en"]
+        name = promo["title"]["en"]
+        if name == "Fluff Crusade":
+            keys_left[pid] = 8
+        else:
+            keys_left[pid] = 4
+        promo_names[pid] = name
 
     for promo in promos["states"]:
         pid = promo["promoId"]
@@ -175,8 +180,11 @@ def start_playing():
 
         left = keys_left[pid]
         if left:
-            logger.info(f"[{name}] Logging the client in...")
+            cd = round(random.randint(15, 60) + random.random(), 3)
+            logger.info(f"[{name}] Starting in {cd} seconds...")
+            time.sleep(cd)
 
+            logger.info(f"[{name}] Logging the client in...")
             login_data = gp.login(pid)
             if not login_data:
                 logger.error(f"[{name}] Failed to login, skipping...")
@@ -184,12 +192,24 @@ def start_playing():
 
             client_id, client_token = login_data
 
-            # TODO:
-            # if name == "Stone Age":
-            #     # Create a new thread that constantly executes get_client in 1 minute interval,
-            #     # until response promoCodesCount == promoCodesTotal
-            #     time.sleep(60 + random.random())
-            #     self.get_client(promo_id, client_token)
+            stop_event = t = None
+
+            if name == "Stone Age":
+                stop_event = Event()
+
+                def thread_func(stop: Event):
+                    logger.info(f"[{name}] get_client thread started")
+
+                    while not stop.is_set():
+                        time.sleep(60 + random.random())
+                        if not stop.is_set():
+                            gp.get_client(pid, client_token)
+                            logger.info(f"[{name}] get_client")
+
+                    logger.info(f"[{name}] get_client thread ended")
+
+                t = Thread(target=thread_func, args=(stop_event,))
+                t.start()
 
             while left > 0:
                 logger.info(f"[{name}] Generating key...")
@@ -208,6 +228,10 @@ def start_playing():
                     logger.info(f"[{name}] Failed to generate key, trying again...")
 
             logger.info(f"Done generating and applying keys for '{name}'")
+
+            if stop_event and t:
+                stop_event.set()
+                t.join()
 
 
 def main():

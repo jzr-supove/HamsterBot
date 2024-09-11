@@ -1,6 +1,7 @@
 import gzip
 import json
 import os
+import time
 import zlib
 from typing import Union, Any
 
@@ -68,3 +69,7 @@ def decompress_response(response) -> bytes:
     except Exception as e:
         logger.debug(f"Decompression error: {type(e).__name__}: {e}")
         raise
+
+
+def timestamp_ms():
+    return int(time.time() * 1000)

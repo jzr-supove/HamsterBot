@@ -356,7 +356,6 @@ class Emulator:
 
         data = response.json()
 
-        # TODO: [NEW_API] Return info about promoCodesCount == promoCodesTotal when promoCode is null
         return data["promoCode"]
 
     def get_client(self, promo_id: str, client_token: str):
@@ -435,11 +434,6 @@ class Emulator:
         try:
             key = self.create_code(promo_id, client_token)
             logger.info(f"Generated key: {key}")
-
-            # TODO: Only for Tire Trio
-            # if games[promo_id].get("isNewAPI"):
-            #     time.sleep(random.random())
-            #     self.get_client(promo_id, client_token)
 
             return key
         except requests.RequestException as e:
