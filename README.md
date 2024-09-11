@@ -2,6 +2,9 @@
 
 HamsterBot automates mini-game playing, promocode generation, and application for Hamster Kombat on Telegram, offering undetectable and fully automated gameplay enhancement.
 
+
+![HamsterBot Banner](https://i.imgur.com/qzCji6D.png)
+
 ## ⭐ Key Features
 
 - Automates mini-game playing in Hamster Kombat
@@ -10,9 +13,15 @@ HamsterBot automates mini-game playing, promocode generation, and application fo
 
 ## 🔥 Why this HamsterBot among others?
 
-- **Undetectable**: Emulates legitimate gameplay using proper API interactions
-- **Fully Automated**: Continuous operation without user intervention
-- **Safe**: Generates keys organically, reducing detection risk
+- **UNDETECTABLE**: Emulates legitimate gameplay using proper API interactions
+- **FULLY AUTOMATED**: Continuous operation without user intervention
+- **SAFE**: Generates keys organically, reducing detection risk
+
+## ❇️ Upcoming Updates:
+
+- [ ] AFK Farm - farms coins 24/7 
+- [ ] Optimal Auto-Upgrade - calculates and buys the most efficient upgrade card
+- [ ] Friendly GUI
 
 ## 📥 Installation & Setup
 
@@ -39,8 +48,8 @@ HamsterBot automates mini-game playing, promocode generation, and application fo
 5. Fill the configuration file with your data:
     - `AUTH_TOKEN` - Your auth token
     - `SEC_CH_UA`, `USER_AGENT` - Your browser headers
-    
-    > See the [Configuration](#Configuration) section for how to obtain them
+
+    See the [Configuration](#configuration) section for how to obtain them
 
 6. Run the emulator:
     ```sh
@@ -79,11 +88,6 @@ HamsterBot automates mini-game playing, promocode generation, and application fo
 ### Obtaining `SEC_CH_UA` and `USER_AGENT` (optional):
 For getting your browser headers, visit https://modheader.com/headers inside Telegram on your phone (using built-in Telegram browser), 
 and copy `user-agent` and `sec-ch-ua` header values to `config.ini` file.
-
-## 🔥 Upcoming Updates:
-
-- [ ] AFK Farm - farms coins 24/7 
-- [ ] Optimal Auto-Upgrade - calculates and buys the most efficient upgrade card
 
 ## 💻 Contributing
 
