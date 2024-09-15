@@ -76,7 +76,7 @@ def apply_promo(code: str) -> bool:
     r.raise_for_status()
 
     data = {'promoCode': code}
-    response = requests.post(url, headers=headers, json=data, timeout=10)
+    response = requests.post(url, headers=headers, json=data, timeout=15)
     response.raise_for_status()
 
     if response.status_code == 200:
@@ -128,7 +128,7 @@ def get_promos():
     r = requests.options(url, headers=options_headers)
     r.raise_for_status()
 
-    response = requests.post(url, headers=headers)
+    response = requests.post(url, headers=headers, timeout=15)
     response.raise_for_status()
 
     content = decompress_response(response)
@@ -211,6 +211,7 @@ def start_playing():
                 t = Thread(target=thread_func, args=(stop_event,))
                 t.start()
 
+            fails = 0
             while left > 0:
                 logger.info(f"[{name}] Generating key...")
                 key = gp.generate_key(pid, client_id, client_token)
@@ -224,8 +225,14 @@ def start_playing():
                             left -= 1
                     except Exception as e:
                         logger.error(f"[{name}] Failed to apply key: {e}")
+                        fails += 1
                 else:
                     logger.info(f"[{name}] Failed to generate key, trying again...")
+                    fails += 1
+
+                if fails >= 3:
+                    logger.error(f"[{name}] Failed to generate or apply keys 3 times, skipping...")
+                    break
 
             logger.info(f"Done generating and applying keys for '{name}'")
 

@@ -1,3 +1,4 @@
+import random
 import time
 import typing
 from sys import maxsize as MAXSIZE
@@ -144,6 +145,8 @@ def buy_until_efficiency(upgrade_id: str, eff: float = 2500):
                 tot_errs = 0
 
             cd = upgrade["cooldownSeconds"]
+            # Additional cooldown to prevent bot detection
+            cd += round(random.randint(10, 30) + random.random(), 2)
             print(f"[{upgrade_id}] Sleeping for {cd} seconds...")
             time.sleep(cd)
 
@@ -186,11 +189,17 @@ def infinite_buy(efficiency_cap: int):
         upgrade_id = upgrade.get("id")
         if upgrade_id:
             print(f"Starting thread for upgrade {upgrade_id}...")
-            t = Thread(target=buy_until_efficiency, args=(upgrade["id"], efficiency_cap))
-            t.start()
-            time.sleep(3)
+            thread = Thread(target=buy_until_efficiency, args=(upgrade["id"], efficiency_cap), daemon=True)
+            thread.start()
+            time.sleep(5)
         else:
             print("Upgrade has no ID")
+
+    try:
+        while True:
+            time.sleep(0.1)
+    except KeyboardInterrupt:
+        print("Main thread received interrupt, waiting for worker to finish")
 
 
 def main():
@@ -239,4 +248,4 @@ def main():
 
 if __name__ == '__main__':
     # main()
-    infinite_buy(2200)
+    infinite_buy(5000)
