@@ -1,6 +1,7 @@
 import gzip
 import json
 import os
+import random
 import time
 import zlib
 from typing import Union, Any
@@ -71,5 +72,33 @@ def decompress_response(response) -> bytes:
         raise
 
 
-def timestamp_ms():
+def timestamp_ms() -> int:
     return int(time.time() * 1000)
+
+
+def random_sleep(a: int, b: int = None, log: Any = None, msg: str = None) -> None:
+    """Sleep randomly in given time interval [a, b] in seconds (or [0, a] if b is omitted)
+
+    Examples:
+      - **random_sleep(5, 15)**  - Sleeps between 5.x and 15.x seconds
+      - **random_sleep(7)**      - Sleeps between 0.x and 7.x seconds
+
+    Where .x is random number in range [0, 1)
+
+    :param a: Lower bound of sleep time in seconds.
+    :param b: (optional): Upper bound of sleep time in seconds. When omitted, start acts like upper bound: [0, a]
+    :param log: logger instance that has '.info()' method
+    :param msg: log message with {secs} template
+    """
+
+    if log is not None:
+        assert hasattr(log, 'info'), "logger instance does not have '.info()' method"
+
+    if b is None:
+        b = a
+        a = 0
+
+    secs = round(random.randint(a, b) + random.random(), 3)
+    if log:
+        log.info(msg.format(secs=secs) if msg else f"Sleeping for {secs} seconds...")
+    time.sleep(secs)

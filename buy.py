@@ -1,13 +1,22 @@
+import argparse
 import random
 import time
 import typing
 from sys import maxsize as MAXSIZE
-from threading import Thread
+from threading import Thread, Lock
 
 import requests
+from loguru import logger
 
-from config import USER_AGENT, SEC_CH_UA, AUTH_TOKEN
-from helper import timestamp_ms, save_json
+from config import USER_AGENT, SEC_CH_UA, AUTH_TOKEN, DEBUG, configure_logger
+from helper import timestamp_ms, save_json, random_sleep
+
+
+if DEBUG:
+    configure_logger("DEBUG")
+else:
+    configure_logger("INFO")
+
 
 option_headers = {
     "Accept": "*/*",
@@ -42,6 +51,17 @@ headers = {
     "Sec-Fetch-Site": "same-site",
     "User-Agent": USER_AGENT
 }
+
+
+user = {
+    "profit_increase": 0,
+    "coins_spent": 0,
+    "cards_bought": 0,
+    "no_coins": False,
+}
+
+user_lock = Lock()
+api_lock = Lock()
 
 
 def buy_upgrade(upgrade_id: str) -> typing.Tuple[int, dict]:
@@ -84,7 +104,24 @@ def get_upgrade_efficiency(upgrade: dict) -> float:
     except ZeroDivisionError:
         efficiency = MAXSIZE
 
-    return efficiency
+    return round(efficiency, 3)
+
+
+def display_upgrade(upgrade: dict):
+    logger.info("-----------------------")
+    logger.info(f"{upgrade['name']} (lvl {upgrade['level']})")
+    logger.info(f"  Price: {upgrade['price']:,}")
+    logger.info(f"  PPH:   {upgrade['profitPerHourDelta']:,}")
+    logger.info(f"  Eff:   {get_upgrade_efficiency(upgrade)}")
+    logger.info("-----------------------")
+
+
+def display_stats():
+    logger.info("----------- STATS -------------")
+    logger.info(f"Profit Increase: {user['profit_increase']:,}")
+    logger.info(f"Coins Spent:     {user['coins_spent']:,}")
+    logger.info(f"Cards Bought:    {user['cards_bought']}")
+    logger.info("-------------------------------")
 
 
 def calculate_efficient_upgrades(data: dict, count: int = 10) -> list:
@@ -114,31 +151,43 @@ def get_upgrades_with_efficiency_lte(data: dict, efficiency_cap: float) -> list:
     return sorted(result, key=lambda x: x['efficiency'])
 
 
-def buy_until_efficiency(upgrade_id: str, eff: float = 2500):
+def buy_until_efficiency(upgrade: dict, eff: float = 2500):
     tot_errs = 0
 
     while True:
+        with user_lock:
+            if user["no_coins"]:
+                return
+
+        display_upgrade(upgrade)
+        upgrade_id = upgrade["id"]
         try:
-            st, resp = buy_upgrade(upgrade_id)
+            with api_lock:
+                st, resp = buy_upgrade(upgrade_id)
         except requests.exceptions.RequestException as e:
-            print(f"[{upgrade_id}] Error while buying upgrade: {e}")
+            logger.info(f"[{upgrade_id}] Error while buying upgrade: {e}")
 
             tot_errs += 1
             if tot_errs == 3:
-                print(f"[{upgrade_id}] 3 consecutive errors occurred, stopping...")
+                logger.info(f"[{upgrade_id}] 3 consecutive errors occurred, stopping...")
                 return
 
-            print(f"[{upgrade_id}] Sleeping for 10 seconds...")
-            time.sleep(10)
+            random_sleep(8, 15, logger, f"[{upgrade_id}] Sleeping for {{secs}} seconds...")
             continue
 
         if st == 200:
+            with user_lock:
+                user["profit_increase"] += upgrade["profitPerHourDelta"]
+                user["coins_spent"] += upgrade["price"]
+                user["cards_bought"] += 1
+
             upgrade = get_upgrade_data(resp, upgrade_id)
             efficiency = get_upgrade_efficiency(upgrade)
-            print(f"[{upgrade_id}] Successfully bought, efficiency: {efficiency}")
+
+            logger.info(f"[{upgrade_id}] Successfully bought, next efficiency: {efficiency}")
 
             if efficiency > eff:
-                print(f"[{upgrade_id}] Done buying upgrades till efficiency: {eff}")
+                logger.info(f"[{upgrade_id}] Done buying upgrades till efficiency: {eff}")
                 return
 
             if tot_errs > 0:
@@ -147,105 +196,84 @@ def buy_until_efficiency(upgrade_id: str, eff: float = 2500):
             cd = upgrade["cooldownSeconds"]
             # Additional cooldown to prevent bot detection
             cd += round(random.randint(10, 30) + random.random(), 2)
-            print(f"[{upgrade_id}] Sleeping for {cd} seconds...")
+
+            logger.info(f"[{upgrade_id}] Sleeping for {cd} seconds...")
             time.sleep(cd)
 
-        elif st == 400:  # st == 400
-            if resp.get("error_code", "") == "UPGRADE_COOLDOWN":
-                if cd := resp.get("cooldownSeconds"):
-                    print(f"[{upgrade_id}] Still in cooldown. Retrying in {cd} seconds")
-                    time.sleep(cd)
-            else:
-                print(f"[{upgrade_id}] Unknown error_code: {resp.get('error_code')}")
-                tot_errs += 1
-                if tot_errs == 3:
-                    print(f"[{upgrade_id}] 3 consecutive errors occurred, stopping...")
-                    return
+        elif st == 400:
+            err_code = resp.get("error_code", "")
 
-                print(f"[{upgrade_id}] Sleeping for 10 seconds...")
-                time.sleep(10)
-        else:
-            print(f"[{upgrade_id}] Unexpected status code: {st}; {resp}")
-            tot_errs += 1
-            if tot_errs == 3:
-                print(f"[{upgrade_id}] 3 consecutive errors occurred, stopping...")
+            if err_code == "UPGRADE_COOLDOWN":
+                if cd := resp.get("cooldownSeconds"):
+                    logger.info(f"[{upgrade_id}] Still in cooldown. Retrying in {cd} seconds")
+                    time.sleep(cd)
+
+            elif err_code == "INSUFFICIENT_FUNDS":
+                with user_lock:
+                    user["no_coins"] = True
+                logger.info(f"[{upgrade_id}] Insufficient funds, stopping buying...")
                 return
 
-            print(f"[{upgrade_id}] Sleeping for 10 seconds...")
-            time.sleep(10)
+            else:
+                logger.info(f"[{upgrade_id}] Unknown error_code: {err_code}; {resp}")
+                return
+        else:
+            logger.info(f"[{upgrade_id}] Unexpected status code: {st}; {resp}")
+            tot_errs += 1
+            if tot_errs == 3:
+                logger.info(f"[{upgrade_id}] 3 consecutive errors occurred, stopping...")
+                return
+
+            random_sleep(8, 15, logger, f"[{upgrade_id}] Sleeping for {{secs}} seconds...")
 
 
 def infinite_buy(efficiency_cap: int):
+    logger.info(f"Starting infinite buy with efficiency limit: {efficiency_cap}")
+
     upgrades = upgrades_for_buy()
     save_json(upgrades, "upgrades_for_buy.json")
 
     if not upgrades:
-        print("No available upgrades to buy.")
+        logger.info("No available upgrades to buy.")
         return
 
     upgrades_list = get_upgrades_with_efficiency_lte(upgrades, efficiency_cap)
+    threads = []
 
+    if len(upgrades_list) == 0:
+        logger.info(f"No available upgrades with efficiency below {efficiency_cap} to buy.")
+        return
+
+    logger.info(f"Preparing to auto-buy {len(upgrades_list)} cards...")
     for upgrade in upgrades_list:
         upgrade_id = upgrade.get("id")
         if upgrade_id:
-            print(f"Starting thread for upgrade {upgrade_id}...")
-            thread = Thread(target=buy_until_efficiency, args=(upgrade["id"], efficiency_cap), daemon=True)
+            logger.info(f"Starting auto-buy loop for card '{upgrade_id}'...")
+            thread = Thread(target=buy_until_efficiency, args=(upgrade, efficiency_cap), daemon=True)
             thread.start()
-            time.sleep(5)
+            threads.append(thread)
+            random_sleep(5, 10)
         else:
-            print("Upgrade has no ID")
+            logger.info("Upgrade has no ID")
 
     try:
-        while True:
-            time.sleep(0.1)
+        while any(thread.is_alive() for thread in threads) and not user["no_coins"]:
+            time.sleep(1)
+        logger.info("All threads have completed. Terminating program...")
     except KeyboardInterrupt:
-        print("Main thread received interrupt, waiting for worker to finish")
+        logger.info("Received interrupt, exiting program")
+
+    display_stats()
 
 
 def main():
-    upgrades = upgrades_for_buy()
-    save_json(upgrades, "upgrades_for_buy.json")
+    parser = argparse.ArgumentParser(description="Script to handle efficiency parameter")
+    parser.add_argument("-e", "--efficiency", type=int, default=2000,
+                        help="Efficiency limit (default: 2000)")
 
-    if not upgrades:
-        print("No available upgrades to buy.")
-        return
-
-    user_input = ""
-    while user_input != "q":
-        upgrades_list = calculate_efficient_upgrades(upgrades)
-
-        print("Top 10 Most Efficient Upgrades:")
-        for i, upgrade in enumerate(upgrades_list, 1):
-            print(f"{i}. {upgrade['name']}")
-            print(f"   Price: {upgrade['price']}")
-            print(f"   Profit Increase: {upgrade['profitPerHourDelta']} per hour")
-            print(f"   Efficiency: {upgrade['efficiency']:.8f}")
-            print(f"   Section: {upgrade['section']}")
-            print(f"   Level: {upgrade['level']}")
-            print("---")
-
-        user_input = input("Enter upgrade ID to buy (or 'q' to quit): ")
-
-        if user_input.isdigit():
-            uid = int(user_input)
-
-            if uid < 1 or uid > len(upgrades_list):
-                print("Invalid upgrade ID.")
-                continue
-
-            upgrade_id = upgrades_list[uid - 1]['id']
-
-            try:
-                st, upgrades = buy_upgrade(upgrade_id)
-                print(f"Bought upgrade {upgrade_id}")
-                save_json(upgrades, "upgrades_for_buy.json")
-
-            except requests.exceptions.RequestException as e:
-                print("Couldn't buy upgrade")
-                if hasattr(e, 'response'):
-                    print(f"Response text: {e.response.text}")
+    args = parser.parse_args()
+    infinite_buy(args.efficiency)
 
 
 if __name__ == '__main__':
-    # main()
-    infinite_buy(5000)
+    main()
