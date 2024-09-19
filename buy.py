@@ -193,7 +193,7 @@ def buy_until_efficiency(upgrade: dict, eff: float = 2500):
             if tot_errs > 0:
                 tot_errs = 0
 
-            cd = upgrade["cooldownSeconds"]
+            cd = upgrade.get("cooldownSeconds", 0)
             # Additional cooldown to prevent bot detection
             cd += round(random.randint(10, 30) + random.random(), 2)
 
@@ -246,6 +246,10 @@ def infinite_buy(efficiency_cap: int):
 
     logger.info(f"Preparing to auto-buy {len(upgrades_list)} cards...")
     for upgrade in upgrades_list:
+        with user_lock:
+            if user["no_coins"]:
+                break
+
         upgrade_id = upgrade.get("id")
         if upgrade_id:
             logger.info(f"Starting auto-buy loop for card '{upgrade_id}'...")
