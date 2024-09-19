@@ -2,14 +2,20 @@
 
 HamsterBot automates mini-game playing, promocode generation, and application for Hamster Kombat on Telegram, offering undetectable and fully automated gameplay enhancement.
 
+## Mini-game emulation and key-generation
 
 ![HamsterBot Banner](https://i.imgur.com/qzCji6D.png)
+
+## Auto-buy
+
+![HamsterBot Banner2](https://i.imgur.com/WMpt3lD.png)
 
 ## ⭐ Key Features
 
 - Automates mini-game playing in Hamster Kombat
 - Generates and applies promo codes authentically
 - "Fire and forget" functionality
+- Automatically buys upgrade cards until reaching specified efficiency
 
 ## 🔥 Why this HamsterBot among others?
 
@@ -20,7 +26,7 @@ HamsterBot automates mini-game playing, promocode generation, and application fo
 ## ❇️ Upcoming Updates:
 
 - [ ] AFK Farm - farms coins 24/7 
-- [ ] Optimal Auto-Upgrade - calculates and buys the most efficient upgrade card
+- [x] Optimal Auto-Upgrade - calculates and buys the most efficient upgrade card
 - [ ] Friendly GUI
 
 ## 📥 Installation & Setup
@@ -60,10 +66,19 @@ HamsterBot automates mini-game playing, promocode generation, and application fo
 
 1. Make sure you are in project directory
 2. *\(Optional\)* Activate the virtual environment if you set one up during installation
-3. Run the script:
-   ```sh
-    python main.py
-    ```
+3. Running the program: 
+   - Mini-game emulator:
+     ```sh
+     python main.py
+     ```
+   - Card auto-buyer (with default efficiency 2000):
+     ```sh
+     python buy.py 
+     ```
+     With custom efficiency value:
+     ```sh
+     python buy.py -e 4500 
+     ```
 
 ## Configuration
 
