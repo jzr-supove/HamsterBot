@@ -29,7 +29,8 @@ playlist = {
     "Zoopolis",
     "Stone Age",
     "Tile Trio",
-    "Fluff Crusade"
+    "Fluff Crusade",
+    "Count Masters"
 }
 
 
@@ -44,6 +45,9 @@ def apply_promo(code: str) -> bool:
         "Host": "api.hamsterkombatgame.io",
         "Origin": "https://hamsterkombatgame.io",
         "Referer": "https://hamsterkombatgame.io/",
+        'sec-ch-ua': SEC_CH_UA,
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site",
@@ -70,7 +74,7 @@ def apply_promo(code: str) -> bool:
     }
 
     logger.info(f"Applying key '{code}'...")
-    url = 'https://api.hamsterkombatgame.io/clicker/apply-promo'
+    url = 'https://api.hamsterkombatgame.io/interlude/apply-promo'
 
     r = requests.options(url, headers=options_headers)
     r.raise_for_status()
@@ -98,6 +102,9 @@ def get_promos():
         "Host": "api.hamsterkombatgame.io",
         "Origin": "https://hamsterkombatgame.io",
         "Referer": "https://hamsterkombatgame.io/",
+        'sec-ch-ua': SEC_CH_UA,
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site",
@@ -123,7 +130,7 @@ def get_promos():
     }
 
     logger.info("Fetching promos...")
-    url = 'https://api.hamsterkombatgame.io/clicker/get-promos'
+    url = 'https://api.hamsterkombatgame.io/interlude/get-promos'
 
     r = requests.options(url, headers=options_headers)
     r.raise_for_status()

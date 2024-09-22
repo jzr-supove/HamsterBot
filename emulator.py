@@ -275,6 +275,26 @@ games = {
         "eventDuration": 930,
         'attempts': 2
     },
+    "4bdc17da-2601-449b-948e-f8c7bd376553": {
+        "name": "Count Masters",
+        "appToken": "4bdc17da-2601-449b-948e-f8c7bd376553",
+        "headers": {
+            "Accept": "*/*",
+            "Accept-Encoding": "deflate, gzip",
+            "Content-Type": "application/json",
+            "Host": "api.gamepromo.io",
+            "User-Agent": "UnityPlayer/2022.3.30f1 (UnityWebRequest/1.0, libcurl/8.5.0-DEV)",
+            "X-Unity-Version": "2022.3.30f1"
+        },
+        "isNewAPI": True,
+        "authLower": True,
+        "clientOrigin": "android",
+        "clientId": gen_timestamp_random_id,
+        "clientVersion": "1.83.10",
+        "eventId": lambda: "StartLevel",
+        "eventDuration": 45,
+        'attempts': 20
+    }
 }
 
 client_ids = load_json("client_ids.json")

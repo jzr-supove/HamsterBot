@@ -65,7 +65,7 @@ api_lock = Lock()
 
 
 def buy_upgrade(upgrade_id: str) -> typing.Tuple[int, dict]:
-    url = "https://api.hamsterkombatgame.io/clicker/buy-upgrade"
+    url = "https://api.hamsterkombatgame.io/interlude/buy-upgrade"
 
     r = requests.options(url, headers=option_headers)
     r.raise_for_status()
@@ -81,7 +81,7 @@ def buy_upgrade(upgrade_id: str) -> typing.Tuple[int, dict]:
 
 
 def upgrades_for_buy():
-    url = "https://api.hamsterkombatgame.io/clicker/upgrades-for-buy"
+    url = "https://api.hamsterkombatgame.io/interlude/upgrades-for-buy"
 
     r = requests.options(url, headers=option_headers)
     r.raise_for_status()
